@@ -141,7 +141,7 @@ def extract_topics(transcript, output_file, checkpoint_file):
         # LLM PROMPT
         prompt = f"""
         Extract ONLY a series of topics from the following deposition text. For each topic, provide the topic name, starting page, and line number in plain text format. 
-        If a specific person is relevant to the topic (i.e the current witness, expert, etc), include their name in the topic.
+        If a specific person is relevant to the topic (i.e the current witness, expert, questioning attorney etc), ALWAYS INCLUDE THEIR NAME in the topic.
         
         Do NOT include ANY description, analysis, commentary, or additional information. Do NOT use any formatting, only plain text. Do NOT include ANYTHING except the output. Ensure the output is structured exactly as follows:
         

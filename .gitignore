@@ -2,3 +2,6 @@
 /venv
 
 /scripts/__pycache__/
+
+outputs/*
+!outputs/outputs.md

@@ -113,7 +113,7 @@ def extract_topics(transcript, output_file, checkpoint_file):
 
     # load the last processed page from the checkpoint (this helps in case our extraction process got interrupted midway)
     last_processed_page = load_checkpoint(checkpoint_file)
-    print(f"Resuming from Page {last_processed_page + 1}...")  # Debugging
+    print(f"Extracting from Page {last_processed_page + 1} onwards...")  # Debugging
 
     # progress bar)
     progress_bar = tqdm(

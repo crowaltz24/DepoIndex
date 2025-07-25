@@ -5,7 +5,7 @@ from utils.toc_generator import load_topics, generate_toc_markdown, generate_toc
 
 """
 Example usage:
-# python build_toc.py --file deposition.pdf --out toc.docx
+python build_toc.py --file deposition.pdf --out toc.docx
 """
 
 def main():

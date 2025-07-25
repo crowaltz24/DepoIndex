@@ -33,7 +33,7 @@ Developed to apply for docu3C's Summer Internship Program 2025.
    DepoIndex
    |_ /inputs
    |_ /outputs
-   |_ /scripts
+   |_ /utils
    |_ /validation
    ```
 

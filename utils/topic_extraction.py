@@ -17,7 +17,7 @@ def load_transcript(file_path):
     # check file extension and load accordingly
     if file_path.endswith(".pdf"):
         reader = PdfReader(file_path)
-        return [page.extract_text() for page in reader.pages]  # returning a list of pages
+        return [page.extract_text() for page in reader.pages]  # returns a list of pages
     elif file_path.endswith(".txt"):
         with open(file_path, "r", encoding="utf-8") as f:
             text = f.read()

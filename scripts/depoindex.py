@@ -7,6 +7,7 @@ def run_depoindex():
     # all relevant file paths
     transcript_file = "./inputs/Deposition for PersisYu_Link.pdf"
     extracted_topics_file = "./outputs/extracted_topics.json"
+    
     markdown_toc_file = "./outputs/table_of_contents.md"
     docx_toc_file = "./outputs/table_of_contents.docx"
     checkpoint_file = "./outputs/checkpoint.json"
@@ -22,7 +23,7 @@ def run_depoindex():
     topics = load_topics(extracted_topics_file)
     generate_toc_markdown(topics, markdown_toc_file)
     generate_toc_docx(topics, docx_toc_file)
-    print(f"\n\nTOC saved to {markdown_toc_file} and {docx_toc_file}\n")
+    # print(f"\n\nTOC saved to {markdown_toc_file} and {docx_toc_file}\n")
 
     # (todo) step 3 - validation with notebook
     

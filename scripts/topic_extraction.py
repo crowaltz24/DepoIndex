@@ -142,7 +142,9 @@ def extract_topics(transcript, output_file, checkpoint_file):
         prompt = f"""
         Extract ONLY a series of topics from the following deposition text. For each topic, provide the topic name, starting page, and line number in plain text format. 
         If a specific person is relevant to the topic (i.e the current witness, expert, questioning attorney etc), ALWAYS INCLUDE THEIR NAME in the topic.
-        
+        If the topic is a question, include the content of the question as well as who asked or answered it in the topic name, if provided
+        Do NOT generate generic topic names such as "Witness Testimony", "Expert Analysis", "Questioning", "Discussion", "Conclusion", etc.
+        Do NOT generate topics for irrelevant details like someone being corrected for their manner of speaking, clarifications, or adjustments. Only informative topics, necessary to the testimony and flow of transcript should be extracted.
         Do NOT include ANY description, analysis, commentary, or additional information. Do NOT use any formatting, only plain text. Do NOT include ANYTHING except the output. Ensure the output is structured exactly as follows:
         
         Topic: "<topic_name>", Page: <page_number>, Line: <line_number>

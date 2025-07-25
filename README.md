@@ -4,18 +4,21 @@ DepoIndex is an automated, AI-powered workflow that reads deposition transcripts
 
 DepoIndex enables clerks to generate an accurate, paginated topic index from a deposition in minutes - eliminating manual scanning and ensuring that judges can jump directly to any point of interest.
 
-Made for docu3C's Summer Internship Program 2025.
+Developed to apply for docu3C's Summer Internship Program 2025.
 
 ### To-Do
-- Validation Notebook
-- Topic accuracy optimization
-- Improve docx pagination...?
-- CLI/API wrapper
+- ~~Topic Extraction~~
+- ~~Table of Contents Generation~~
+- ~~Validation Notebook~~
+- CLI wrapper
 
-## Models
 
-- Gemma3 (4B) for topic extraction.
-<!-- - DeepSeek-R1 (8B) for validation and reasoning. -->
+## Requirements
+
+- Python 3.12
+- OLlama with the following models pulled:
+  - Gemma3 (4B) for topic extraction.
+  - DeepSeek-R1 (8B) for reasoning based validation.
   
 ## Setup
 1. Clone repo
@@ -26,11 +29,14 @@ Made for docu3C's Summer Internship Program 2025.
 
 2. Ensure your directory structure is as follows:
    
+   ```
    DepoIndex
-   - /inputs
-   - /outputs
-   - /scripts
-   
+   |_ /inputs
+   |_ /outputs
+   |_ /scripts
+   |_ /validation
+   ```
+
 3. Create venv
    ```bash
    python -m venv venv
@@ -61,8 +67,16 @@ Made for docu3C's Summer Internship Program 2025.
 
    **NOTE:** If you have a different input file, modify the `transcript_file` variable in this script to point to it: `./inputs/YOUR_DEPOSITION_FILE.pdf`.
 
-### Alternatively
+### Manual Usage
 
 Run the scripts one by one:
 - `topic_extraction.py` extracts topics into `extracted_topics.json`.
 - `topc_generator.py` uses the extracted topics to generate a table of contents, saving it in Markdown and docx formats.
+
+## Validation
+`validation.ipynb` is... a validation notebook. It takes a random sample of topics from y our extracted topics, and runs them past a reasoning LLM to compare with an excerpt of the text they were generated from to judge accuracy. 
+
+**NOTE:** You can change the `number_of_topics` to validate on as many topics as you want.
+
+## License
+MIT License.

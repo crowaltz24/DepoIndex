@@ -211,7 +211,7 @@ def extract_topics(transcript, output_file, checkpoint_file):
 
             normalized_topic = normalize_topic(topic)
             existing_topic = next(
-                (t for t in page_topics if are_topics_similar(normalized_topic, normalize_topic(t["topic"]))),
+                (t for t in page_topics[-2:] if are_topics_similar(normalized_topic, normalize_topic(t["topic"]))), # -2 because i only want to check the past 2 pages
                 None
             )
 

@@ -3,7 +3,7 @@ import os
 # from dotenv import load_dotenv
 
 from ollama import chat, ChatResponse
-from difflib import SequenceMatcher # for comparing topic similarity
+from rapidfuzz.fuzz import ratio  # for comparing topic similarity
 
 from PyPDF2 import PdfReader
 from tqdm import tqdm  # for progress bar
@@ -41,10 +41,10 @@ Thus we can eliminate topic redundancy.
 """
 
 # !!! SIMILARITY THRESHOLD !!!
-similarity_threshold = 0.8
+similarity_threshold = 80
 
 def are_topics_similar(topic1, topic2, threshold=similarity_threshold):
-    return SequenceMatcher(None, topic1, topic2).ratio() >= threshold
+    return ratio(topic1, topic2) >= threshold
 
 def parse_topic_line(line):
     try:

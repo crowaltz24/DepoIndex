@@ -135,7 +135,7 @@ def extract_topics(transcript, output_file, checkpoint_file):
 
         # Using tqdm.write to avoid interfering with the progress bar 
         tqdm.write(f"\n\nProcessing Page {page_number}...")  
-        tqdm.write(f"\nPage Content (first 500 chars): \n{page_content[:500]}")  # Debugging
+        # tqdm.write(f"\nPage Content (first 500 chars): \n{page_content[:500]}")  # Debugging
 
 
         # LLM PROMPT
@@ -166,7 +166,7 @@ def extract_topics(transcript, output_file, checkpoint_file):
                 messages=[{"role": "user", "content": prompt}],
             )
             extracted = response.message.content.strip()
-            tqdm.write(f"\n\nRaw Response for Page {page_number}:\n{extracted}\n\n")  # Debugging
+            tqdm.write(f"\n\nLLM Response for Page {page_number}:\n{extracted}\n\n")  # Debugging
         except Exception as e:
             tqdm.write(f"Error processing page {page_number}: {e}")
             progress_bar.update(1)  # update progress bar even if the page is skipped

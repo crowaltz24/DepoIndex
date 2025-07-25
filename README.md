@@ -10,18 +10,18 @@ Developed to apply for docu3C's Summer Internship Program 2025.
 - ~~Topic Extraction~~
 - ~~Table of Contents Generation~~
 - ~~Validation Notebook~~
-- CLI wrapper
+- ~~CLI wrapper~~
 
 
 ## Requirements
 
 - Python 3.12
-- OLlama with the following models pulled:
+- Ollama with the following models pulled:
   - Gemma3 (4B) for topic extraction.
   - DeepSeek-R1 (8B) for reasoning based validation.
   
 ## Setup
-1. Clone repo
+1. Clone repo:
    ```bash
    git clone https://crowaltz24/DepoIndex
    cd DepoIndex
@@ -37,18 +37,37 @@ Developed to apply for docu3C's Summer Internship Program 2025.
    |_ /validation
    ```
 
-3. Create venv
+3. Create venv:
    ```bash
    python -m venv venv
    venv/scripts/activate
    ```
 
-4. Install requirements
+4. Install requirements:
    ```bash
    pip install -r requirements.txt
    ```
 
 ## How to Use
+
+### CLI
+1. Place your Deposition Transcript in `/inputs`.
+   
+2. Run the script, providing input and output file names.
+  
+   ```bash
+   python build_toc.py --file deposition.pdf --out toc.docx
+   ```
+
+- `--file` accepts input path (relative to `/inputs`)
+  - This may be in `.pdf` or `.txt` format.
+- `--out` accepts output path (relative to `/outputs`)
+  - This may be in `.md` or `.docx` format
+
+3. Access your outputs from the `/outputs` directory.
+  
+
+<!-- ### Usage
 1. Place your Deposition Transcript in `/inputs`.
    
 2. Move to `/scripts`
@@ -65,7 +84,7 @@ Developed to apply for docu3C's Summer Internship Program 2025.
    - You will see a progress bar in the terminal to indicate topic extraction progress.
    - Then, it creates and saves `table_of_contents.md` and `table_of_contents.docx` to `/outputs`.
 
-   **NOTE:** If you have a different input file, modify the `transcript_file` variable in this script to point to it: `./inputs/YOUR_DEPOSITION_FILE.pdf`.
+   **NOTE:** If you have a different input file, modify the `transcript_file` variable in this script to point to it: `./inputs/YOUR_DEPOSITION_FILE.pdf`. -->
 
 ### Manual Usage
 
@@ -74,7 +93,9 @@ Run the scripts one by one:
 - `topc_generator.py` uses the extracted topics to generate a table of contents, saving it in Markdown and docx formats.
 
 ## Validation
-`validation.ipynb` is... a validation notebook. It takes a random sample of topics from y our extracted topics, and runs them past a reasoning LLM to compare with an excerpt of the text they were generated from to judge accuracy. 
+`validation.ipynb` is... a validation notebook. 
+
+It takes a random sample of topics from y our extracted topics, and runs them past a reasoning LLM to compare with an excerpt of the text they were generated from to judge accuracy. 
 
 **NOTE:** You can change the `number_of_topics` to validate on as many topics as you want.
 

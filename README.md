@@ -88,6 +88,10 @@ Developed to apply for docu3C's Summer Internship Program 2025.
 
 ### Manual Usage
 
+Run `depoindex.py`.
+
+OR
+
 Run the scripts one by one:
 - `topic_extraction.py` extracts topics into `extracted_topics.json`.
 - `topc_generator.py` uses the extracted topics to generate a table of contents, saving it in Markdown and docx formats.

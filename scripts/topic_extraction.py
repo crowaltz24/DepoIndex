@@ -12,10 +12,20 @@ from tqdm import tqdm  # for progress bar
 # initially I was using the openrouter API but now i switched to local models via ollama so I'm just gonna comment this out
 # load_dotenv()
 
-# pdf loader
+# pdf/txt loader
 def load_transcript(file_path):
-    reader = PdfReader(file_path)
-    return [page.extract_text() for page in reader.pages] # returning a list of pages
+    # check file extension and load accordingly
+    if file_path.endswith(".pdf"):
+        reader = PdfReader(file_path)
+        return [page.extract_text() for page in reader.pages]  # returning a list of pages
+    elif file_path.endswith(".txt"):
+        with open(file_path, "r", encoding="utf-8") as f:
+            text = f.read()
+        # char limit determines page split (1000 chars for now)
+        chars_per_page = 1000
+        return [text[i:i + chars_per_page] for i in range(0, len(text), chars_per_page)]
+    else:
+        raise ValueError("Unsupported file format. Only .pdf and .txt files are supported.")
 
 def normalize_topic(topic):
     return topic.lower().strip()
@@ -113,14 +123,15 @@ def extract_topics(transcript, output_file, checkpoint_file):
 
     # load the last processed page from the checkpoint (this helps in case our extraction process got interrupted midway)
     last_processed_page = load_checkpoint(checkpoint_file)
-    print(f"Extracting from Page {last_processed_page + 1} onwards...")  # Debugging
+    print(f"Extracting from Page {last_processed_page + 1} onwards...\n\n")  # Debugging
 
-    # progress bar)
+    # progress bar
     progress_bar = tqdm(
         total=total_pages,
-        desc="\n\nProcessing Deposition",
+        desc="Processing Deposition",
         unit="page",
-        dynamic_ncols=True
+        dynamic_ncols=True,
+        leave=True  # ensures prog bar stays in place
     )
     # whats better than waiting? waiting watching numbers go up :D
 
@@ -134,7 +145,7 @@ def extract_topics(transcript, output_file, checkpoint_file):
             continue
 
         # Using tqdm.write to avoid interfering with the progress bar 
-        tqdm.write(f"\n\nProcessing Page {page_number}...")  
+        # tqdm.write(f"\n\nProcessing Page {page_number}...")  # Debugging
         # tqdm.write(f"\nPage Content (first 500 chars): \n{page_content[:500]}")  # Debugging
 
 
@@ -166,7 +177,7 @@ def extract_topics(transcript, output_file, checkpoint_file):
                 messages=[{"role": "user", "content": prompt}],
             )
             extracted = response.message.content.strip()
-            tqdm.write(f"\n\nLLM Response for Page {page_number}:\n{extracted}\n\n")  # Debugging
+            # tqdm.write(f"\n\nLLM Response for Page {page_number}:\n{extracted}\n\n")  # Debugging
         except Exception as e:
             tqdm.write(f"Error processing page {page_number}: {e}")
             progress_bar.update(1)  # update progress bar even if the page is skipped
@@ -179,7 +190,7 @@ def extract_topics(transcript, output_file, checkpoint_file):
 
         # now we check if the response or actual text indicates the end of the deposition so we're not wasting resources on anything other than the actual transcript text
         if is_end_of_deposition(page_content, extracted):
-            tqdm.write(f"End of Deposition detected on Page {page_number}. Stopping further processing.")
+            tqdm.write(f"End of Deposition detected on Page {page_number}.")
             # and save "End of Deposition" as a topic for this page
             save_page_topics_to_json(page_number, [
                 {

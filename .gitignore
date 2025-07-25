@@ -5,3 +5,5 @@
 
 outputs/*
 !outputs/outputs.md
+
+/validation/copies

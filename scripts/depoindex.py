@@ -24,8 +24,6 @@ def run_depoindex():
     generate_toc_markdown(topics, markdown_toc_file)
     generate_toc_docx(topics, docx_toc_file)
     # print(f"\n\nTOC saved to {markdown_toc_file} and {docx_toc_file}\n")
-
-    # (todo) step 3 - validation with notebook
     
 if __name__ == "__main__":
     run_depoindex()

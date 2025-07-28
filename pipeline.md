@@ -1,0 +1,7 @@
+- [x] Document Preprocessing
+- [x] Chunking Strategy
+- [x] Embedding Generation
+- [x] Vector Store Indexing
+- [x] Retrieval & Generation
+- [x] Post-processing
+- [x] CLI Wrapper

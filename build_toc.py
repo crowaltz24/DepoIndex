@@ -1,63 +1,83 @@
 import argparse
 import os
-from utils.topic_extraction import load_transcript, extract_topics
-from utils.toc_generator import load_topics, generate_toc_markdown, generate_toc_docx
-
-"""
-Example usage:
-python build_toc.py --file deposition.pdf --out toc.docx
-"""
+import sys
+from pathlib import Path
+import time
 
 def main():
-    parser = argparse.ArgumentParser(description="CLI Wrapper for DepoIndex")
+    start_time = time.perf_counter()
+    parser = argparse.ArgumentParser(description="CLI Wrapper for  DepoIndex")
     
-    # args for I/O (relevant file paths)
+    # Main args
     parser.add_argument(
-        "--file", 
+        "--input", 
         type=str, 
-        required=True, 
-        help="Name of the deposition transcript file (located in the 'inputs' folder)."
+        required=True,
+        help="Input deposition file (PDF) in the inputs/ directory"
     )
     parser.add_argument(
-        "--out", 
-        type=str, 
-        required=True, 
-        help="Name of the output file (saved in the 'outputs' folder)."
+        "--output",
+        type=str,
+        required=True,
+        help="Output TOC file name (with .docx or .md extension) in outputs/"
     )
     
-    # parse args
     args = parser.parse_args()
+
+    #  input valid?
+    input_path = Path("inputs") / args.input
+    if not input_path.exists():
+        print(f"Error: Input file not found at {input_path}")
+        sys.exit(1)
+
+    # detecting output format, generate path based on extension
+    output_path = Path("outputs") / args.output
+    output_format = output_path.suffix.lower()
     
-    # paths relative to root directory, generated based on what file is specified in --out arg
-    input_file = os.path.join("inputs", args.file)
-    if not os.path.exists(input_file):
-        raise FileNotFoundError(f"Input file '{input_file}' not found in the 'inputs' folder.")
+    if output_format not in [".docx", ".md"]:
+        print("Error: Output file must end with .docx or .md")
+        sys.exit(1)
 
-    output_file = os.path.join("outputs", args.out)
-    output_extension = os.path.splitext(output_file)[1].lower()
-    if output_extension not in [".md", ".docx"]:
-        raise ValueError("Invalid output format. Use '.md' for Markdown or '.docx' for DOCX.")
+    # create output dir if needed
+    Path("outputs").mkdir(exist_ok=True)
 
-    # json path
-    output_topics = os.path.splitext(output_file)[0] + ".json"
-    checkpoint_file = os.path.join("outputs", "checkpoint.json")  # default checkpoint file
+    # file paths
+    preprocessed_path = Path("outputs") / "preprocessed.json"
+    chunks_path = Path("outputs") / "chunks.json"
+    vector_store_path = Path("outputs") / "vector_store"
+    topics_path = output_path.with_suffix(".json")
 
-    # Step 1 - topic extraction
-    print("\n\nStarting topic extraction...\n\n")
-    transcript = load_transcript(input_file)
-    extract_topics(transcript, output_topics, checkpoint_file=checkpoint_file)
-    print(f"\n\nTopics saved to {output_topics}\n")
-    
-    # Step 2 - generating TOC
-    print("\n\nGenerating Table of Contents...\n")
-    topics = load_topics(output_topics)
-    if output_extension == ".md":
-        generate_toc_markdown(topics, output_file)
-        print(f"\n\nTOC saved to {output_file}\n")
-    elif output_extension == ".docx":
-        generate_toc_docx(topics, output_file)
-        print(f"\n\nTOC saved to {output_file}\n")
+    # pipeline
+    try:
+
+        print("\n=== STEP 1: Preprocessing ===")
+        os.system(f"python utils/preprocess_doc.py {input_path} {preprocessed_path}")
+        
+
+        print("\n=== STEP 2: Chunking ===")
+        os.system(f"python utils/chunk_doc.py {preprocessed_path} {chunks_path}")
+        
+
+        print("\n=== STEP 3: Creating Vector Store ===")
+        os.system(f"python utils/embed_doc.py {chunks_path} {vector_store_path}")
+        
+
+        print("\n=== STEP 4: Extracting Topics ===")
+        os.system(f"python utils/extract_topics.py {vector_store_path} {topics_path}")
+        
+
+        print("\n=== STEP 5: Generating Table of Contents ===")
+        os.system(f"python utils/generate_toc.py {topics_path} {output_path}")
+
+        print(f"\nProcessing complete! TOC saved to {output_path}")
+        
+        end_time = time.perf_counter()
+        elapsed_time = end_time - start_time
+        print(f"Total processing time: {elapsed_time:.2f} seconds")
+
+    except Exception as e:
+        print(f"\nError during processing: {str(e)}")
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()
-

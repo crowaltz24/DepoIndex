@@ -10,7 +10,7 @@ def main():
     
     # Main args
     parser.add_argument(
-        "--input", 
+        "--file", 
         type=str, 
         required=True,
         help="Input deposition file (PDF) in the inputs/ directory"

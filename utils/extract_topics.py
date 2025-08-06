@@ -2,6 +2,7 @@ import json
 import os
 import re
 from collections import defaultdict
+from concurrent.futures import ThreadPoolExecutor
 from llama_index.core import Settings, VectorStoreIndex
 from llama_index.vector_stores.chroma import ChromaVectorStore
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
@@ -17,7 +18,7 @@ def detect_deposition_end(nodes):
         r"deposition\s+concluded",
         r"end\s+of\s+deposition",
         r"this\s+concludes\s+today's",
-        r"whereupon.*deposition"
+        # r"whereupon.*deposition"
     ]
     
     # ignore start of document for ending check
@@ -39,6 +40,44 @@ def validate_line_numbers(node):
         node.metadata['line_end'] = node.metadata['line_start'] + max_lines_per_chunk
     return node
 
+# def is_substantive(node):
+#     text = node.text.lower()
+#     return (
+#         len(text.split()) > 15 and  # Minimum word count
+#         not re.search(r'(exhibit|resume|off the record|break|recess)', text) and
+#         re.search(r'(testimony|examination|discussion|question|answer)', text) is not None
+#     )
+
+def process_node(node, llm):
+    try:
+        node = validate_line_numbers(node)
+        prompt = f"""Output ONLY a detailed label for this deposition segment including names if relevant (6-8 words max):
+        {node.text[:300]}
+        
+        Avoid vague topics such as "Witness details regarding allegations" or "Legal deposition Transcript of testimony."
+
+        Example formats:
+        John Doe testimony about email correspondence
+        Unusual Experience with XYZ
+        Cross-examination regarding financial records - Jane Smith
+        Discussion of meeting on June 15th
+        
+        Label: """
+        
+        topic = llm.complete(prompt).text.strip('"').strip()
+        return {
+            "topic": topic,
+            "page_start": node.metadata['page_start'],
+            "line_start": node.metadata['line_start'],
+            "line_end": node.metadata['line_end'],
+            "page_end": node.metadata['page_end'],
+            "text_preview": node.text[:200] + "...",
+            "score": float(node.score)
+        }
+    except Exception as e:
+        print(f"\nError processing segment (Page {node.metadata.get('page_start', '?')}: {str(e)}")
+        return None
+
 def extract_topics(index_path, output_path, num_topics=50):
     # init component
     print("Loading vector store...")
@@ -52,7 +91,7 @@ def extract_topics(index_path, output_path, num_topics=50):
 
     vector_store = ChromaVectorStore(chroma_collection=chroma_collection)
     index = VectorStoreIndex.from_vector_store(vector_store, embed_model=Settings.embed_model)
-    llm = Ollama(model="gemma3", request_timeout=60)
+    llm = Ollama(model="gemma3:1b", request_timeout=60)
 
     # chronological order
     print("Retrieving content in page order...")
@@ -67,55 +106,30 @@ def extract_topics(index_path, output_path, num_topics=50):
     end_index = detect_deposition_end(all_nodes)
     substantive_nodes = all_nodes[:end_index]
     
-    print(f"\nFound {len(substantive_nodes)} substantive segments (ending at page {substantive_nodes[-1].metadata['page_start'] if substantive_nodes else 'N/A'})")
+    # metadata prefilter
+    # filtered_nodes = [n for n in substantive_nodes if is_substantive(n)]
+    filtered_nodes = [n for n in substantive_nodes]
+    print(f"\nFiltered to {len(filtered_nodes)} substantive segments (from {len(substantive_nodes)})")
 
-    # most relevant segments chronologically
-    toc = defaultdict(list)
-    processed_count = 0
-    
     # relevance and page order
     sorted_nodes = sorted(
-        substantive_nodes,
+        filtered_nodes,
         key=lambda x: (-x.score, x.metadata['page_start'], x.metadata['line_start'])
-    )
+    )[:num_topics]  # Early limit to target count
 
-    with tqdm(total=min(num_topics, len(sorted_nodes)), desc="Processing segments") as pbar:
+    # parallel processing
+    toc = defaultdict(list)
+    print(f"Processing {len(sorted_nodes)} segments with parallel LLM...")
+    
+    with ThreadPoolExecutor(max_workers=4) as executor:
+        futures = []
         for node in sorted_nodes:
-            try:
-                node = validate_line_numbers(node)
-                
-                # LLM PROMPT
-                prompt = f"""Output ONLY a detailed label for this deposition segment including names if relevant (6-8 words max):
-                {node.text[:300]}
-                
-                Example formats:
-                - Witness testimony about email correspondence - John Doe
-                - Cross-examination regarding financial records - Jane Smith
-                - Discussion of meeting on June 15th
-
-                Label: """
-                
-                topic = llm.complete(prompt).text.strip('"').strip()
-                
-                toc[f"Page {node.metadata['page_start']}"].append({
-                    "topic": topic,
-                    "page_start": node.metadata['page_start'],
-                    "line_start": node.metadata['line_start'],
-                    "line_end": node.metadata['line_end'],
-                    "page_end": node.metadata['page_end'],
-                    "text_preview": node.text[:200] + "...",
-                    "score": float(node.score)
-                })
-                
-                processed_count += 1
-                pbar.update(1)
-                
-                if processed_count >= num_topics:
-                    break
-                    
-            except Exception as e:
-                print(f"\nError processing segment (Page {node.metadata.get('page_start', '?')}: {str(e)}")
-                continue
+            futures.append(executor.submit(process_node, node, llm))
+        
+        for future in tqdm(futures, desc="Processing segments"):
+            result = future.result()
+            if result:
+                toc[f"Page {result['page_start']}"].append(result)
 
     # saving results
     print("\nFinalizing table of contents...")
@@ -125,7 +139,7 @@ def extract_topics(index_path, output_path, num_topics=50):
                           key=lambda x: int(x[0].split()[1]))), 
                   f, indent=2)
     
-    print(f"\nProcessed {processed_count} segments across {len(toc)} pages")
+    print(f"\nProcessed {sum(len(v) for v in toc.values())} segments across {len(toc)} pages")
     print(f"Output saved to: {os.path.abspath(output_path)}")
 
 if __name__ == '__main__':

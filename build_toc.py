@@ -25,7 +25,7 @@ def main():
     args = parser.parse_args()
 
     #  input valid?
-    input_path = Path("inputs") / args.input
+    input_path = Path("inputs") / args.file
     if not input_path.exists():
         print(f"Error: Input file not found at {input_path}")
         sys.exit(1)

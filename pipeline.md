@@ -1,7 +1,6 @@
-- [x] Document Preprocessing
-- [x] Chunking Strategy
-- [x] Embedding Generation
-- [x] Vector Store Indexing
-- [x] Retrieval & Generation
-- [x] Post-processing
-- [x] CLI Wrapper
+- [ ] PDF processing
+- [ ] Chunking Strategy
+- [ ] Metadata Enrichment
+- [ ] LLM Calls
+- [ ] TOC Generation
+- [ ] Post-processing

@@ -4,6 +4,7 @@ from llama_index.core.extractors import SummaryExtractor
 from llama_index.core import Settings
 from llama_index.llms.openai import OpenAI
 from dotenv import load_dotenv
+from utils.pdf_processor import is_end_of_deposition
 
 load_dotenv()
 
@@ -44,11 +45,10 @@ def parse_summary(summary_text):
     
     return result
 
-async def extract_metadata(nodes):
+async def extract_metadata(nodes, batch_size=5):
     if not nodes:
         return []
-    
-    # LLM
+
     llm = OpenAI(
         api_key=os.getenv("OPENAI_API_KEY"),
         model="gpt-3.5-turbo",
@@ -56,7 +56,6 @@ async def extract_metadata(nodes):
     )
     Settings.llm = llm
 
-    # extractor
     summary_extractor = SummaryExtractor(
         summaries=["self"],
         prompt_template=DEPOSITION_PROMPT,
@@ -65,15 +64,20 @@ async def extract_metadata(nodes):
     )
 
     processed_nodes = []
-    for node in nodes:
+    for i in range(0, len(nodes), batch_size):
+        batch = nodes[i:i+batch_size]
+        
         try:
-            processed = await summary_extractor.aprocess_nodes([node])
-            if processed:
-                summary = processed[0].metadata.get("section_summary", "")
+            processed = await summary_extractor.aprocess_nodes(batch)
+            for node in processed:
+                summary = node.metadata.get("section_summary", "")
+                if is_end_of_deposition(summary):  # batch content
+                    return processed_nodes
+                    
                 node.metadata["deposition_summary"] = parse_summary(summary)
                 processed_nodes.append(node)
         except Exception as e:
-            print(f"Node processing error: {e}")
+            print(f"Batch processing error: {e}")
             continue
     
     return processed_nodes

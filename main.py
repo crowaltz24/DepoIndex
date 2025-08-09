@@ -11,31 +11,24 @@ from utils.toc_generator import generate_toc
 load_dotenv()
 
 async def run_pipeline(input_path, output_path):
-    print("Starting processing pipeline...")
+    print("Starting deposition processing...")
     start_time = time.time()
     
-    print("Processing PDF...")
-    pdf_start = time.time()
+    print("Processing PDF (with end detection)...")
     nodes = process_pdf(input_path)
-    print(f"PDF processed in {time.time() - pdf_start:.2f}s ({len(nodes)} chunks)")
+    print(f"Processed {len(nodes)} content chunks before deposition end")
     
-    print("Extracting metadata...")
-    meta_start = time.time()
-    nodes = await extract_metadata(nodes)
-    print(f"Metadata extracted in {time.time() - meta_start:.2f}s ({len(nodes)} processed)")
+    print("Extracting metadata in batches...")
+    nodes = await extract_metadata(nodes, batch_size=5)
+    print(f"Extracted metadata from {len(nodes)} relevant chunks")
     
-    print("Generating table of contents...")
-    toc_start = time.time()
     toc = await generate_toc(nodes)
-    print(f"TOC generated in {time.time() - toc_start:.2f}s ({len(toc)} entries)")
-    
-    print("Saving results...")
-    Path(output_path).parent.mkdir(parents=True, exist_ok=True)
+
     with open(output_path, 'w') as f:
         json.dump(toc, f, indent=2)
     
-    print(f"\nPipeline completed in {time.time() - start_time:.2f} seconds")
-    print(f"Output saved to: {output_path}")
+    print(f"\nCompleted in {time.time() - start_time:.2f}s")
+    print(f"Final TOC entries: {len(toc)}")
 
 if __name__ == "__main__":
     input_pdf = os.path.join("inputs", "deposition.pdf")

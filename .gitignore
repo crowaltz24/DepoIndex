@@ -4,6 +4,8 @@ previous/
 venv/
 
 utils/__pycache__
+utils/temp
+utils/temp2
 
 outputs/*
 !outputs/outputs.md

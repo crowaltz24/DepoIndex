@@ -14,11 +14,11 @@ async def run_pipeline(input_path, output_path):
     print("Starting deposition processing...")
     start_time = time.time()
     
-    print("Processing PDF (with end detection)...")
+    print("\nProcessing PDF...")
     nodes = process_pdf(input_path)
     print(f"Processed {len(nodes)} content chunks before deposition end")
     
-    print("Extracting metadata in batches...")
+    print("\nExtracting metadata...")
     nodes = await extract_metadata(nodes, batch_size=5)
     print(f"Extracted metadata from {len(nodes)} relevant chunks")
     

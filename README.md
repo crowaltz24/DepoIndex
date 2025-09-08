@@ -4,8 +4,6 @@ DepoIndex is an automated, AI-powered workflow that reads deposition transcripts
 
 DepoIndex enables clerks to generate an accurate, paginated topic index from a deposition in minutes - eliminating manual scanning and ensuring that judges can jump directly to any point of interest.
 
-Developed to apply for docu3C's Summer Internship Program 2025.
-
 ### To-Do
 - ~~Topic Extraction~~
 - ~~Table of Contents Generation~~
